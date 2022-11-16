@@ -1,24 +1,23 @@
+require("dotenv").config();
+
 const express = require("express");
 const cors = require("cors");
 const bodyParser = require("body-parser");
 const SpotifyWebApi = require("spotify-web-api-node");
+const lyricsFinder = require("lyrics-finder");
 
-// require("dotenv").config();
-
-const SPOTIFY_REDIRECT_URI = "http://localhost:3000";
-const SPOTIFY_CLIENT_ID = "521c7d7095d4429983c8208e90694c24";
-const SPOTIFY_CLIENT_SECRET = "1f887585a71447669b9c12fc12786224";
-const SPOTIFY_REFRESH_TOKEN = "";
 const app = express();
 app.use(cors());
 app.use(bodyParser.json());
+// allow parse url parameters in get request
+app.use(bodyParser.urlencoded({ extended: true }));
 
 app.post("/refresh", (req, res) => {
   const refreshToken = req.body.refreshToken;
   const spotifyApi = new SpotifyWebApi({
-    redirectUri: SPOTIFY_REDIRECT_URI, //process.env.SPOTIFY_REDIRECT_URI,
-    clientId: SPOTIFY_CLIENT_ID, //process.env.SPOTIFY_CLIENT_ID,
-    clientSecret: SPOTIFY_CLIENT_SECRET, //process.env.SPOTIFY_CLIENT_SECRET,
+    redirectUri: process.env.SPOTIFY_REDIRECT_URI,
+    clientId: process.env.SPOTIFY_CLIENT_ID,
+    clientSecret: process.env.SPOTIFY_CLIENT_SECRET,
     refreshToken,
   });
 
@@ -44,9 +43,9 @@ app.post("/login", (req, res) => {
   const code = req.body.code;
 
   const spotifyApi = new SpotifyWebApi({
-    redirectUri: SPOTIFY_REDIRECT_URI, //process.env.SPOTIFY_REDIRECT_URI,
-    clientId: SPOTIFY_CLIENT_ID, //process.env.SPOTIFY_CLIENT_ID,
-    clientSecret: SPOTIFY_CLIENT_SECRET, //process.env.SPOTIFY_CLIENT_SECRET,
+    redirectUri: process.env.SPOTIFY_REDIRECT_URI,
+    clientId: process.env.SPOTIFY_CLIENT_ID,
+    clientSecret: process.env.SPOTIFY_CLIENT_SECRET,
   });
 
   spotifyApi
@@ -70,6 +69,13 @@ app.post("/login", (req, res) => {
       console.log(err);
       res.sendStatus(400);
     });
+});
+
+app.get("/lyrics", async (req, res) => {
+  const lyrics =
+    (await lyricsFinder(req.query.artist, req.query.track)) ||
+    "No Lyrics found";
+  res.json({ lyrics });
 });
 
 app.listen(3001);
